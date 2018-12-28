@@ -1,4 +1,4 @@
 plugins:
-  iso_enabled:
+  alert_enabled:
     default: true
     client: true
