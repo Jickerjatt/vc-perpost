@@ -1,6 +1,4 @@
 en:
   js:
-    iso:
-      title: 'filter by this user''s posts'
-    unisoed:
-      title: 'view all posts'
+    alert:
+      title: 'show alert'
