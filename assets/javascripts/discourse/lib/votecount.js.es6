@@ -3,9 +3,9 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 
 export default Ember.Object.create({
 
-  getVotecount(postId) {
-    return ajax(`/votecount/${postId}.json`, {
-      type: 'POST'
+  getVotecount(topicId, postNumber) {
+    return ajax(`/votecount/${topicId}/${postNumber}.json`, {
+      type: 'GET'
     }).catch(popupAjaxError)
   }
 })
