@@ -9,27 +9,29 @@ let topicController;
     topicController = event.controller
   })
 
-  api.addPostMenuButton('alert', attrs => {
+  api.addPostMenuButton('votecount', attrs => {
 
     return {
-      action: 'clickAlert',
+      action: 'showVotecount',
       icon: 'bath',
-      title: 'alert.title',
+      title: 'votecount.title',
       position: 'last'
     }
   })
 
-  api.attachWidgetAction('post-menu', 'clickAlert', function() {
-    Votecount.getVotecount(this.attrs.id).then(function(vcJson)
-    {
-      alert(
-        'Votee: ' + vcJson.Votee[0] + ', ' + vcJson.Votee[1] + ', ' + vcJson.Votee[2]);
+  api.attachWidgetAction('post-menu', 'showVotecount', function() {
+    Votecount.getVotecount(this.attrs.topicId, this.attrs.post_number).then(function(vcJson) {
+      var vc = "";
+      for (var i = 0 ; i < vcJson.votecount.length ; i++){
+        vc += "\n" +vcJson.votecount[i].voter + " is voting " + vcJson.votecount[i].votee;
+      }
+      alert(vc);
     });
   })
 }
 
 export default {
-  name: 'alert-button',
+  name: 'votecount-button',
   initialize: function() {
     withPluginApi('0.8.6', api => initializePlugin(api))
   }

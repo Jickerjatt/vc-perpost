@@ -17,7 +17,7 @@ after_initialize do
   end
 
   ::Votecount::Engine.routes.draw do
-    post   "/:post_id" => "votecount#get_latest"
+    get   "/:topic_id/:post_number" => "votecount#get_latest"
   end
 
   Discourse::Application.routes.append do
@@ -27,21 +27,27 @@ after_initialize do
   class ::Votecount::VotecountController < ApplicationController
 
     def get_latest
-        render json: { 'Votee': ['Voter1', 'Voter2', 'Voter3'] }
+        # post.raw will access the raw of the post
+        render json: [ { 'voter': 'Ellibereth', 'votee': 'fferyllt'}, { 'voter': 'Keychain', 'votee': 'Elli'}, {'voter': 'Chesskid', 'votee': 'Elli'} ]
     end
 
     private
 
     def post
-      @post ||= Post.find_by(id: params[:post_id]) if params[:post_id]
+      @post ||= Post.find_by("topic_id = :topic_id AND post_number = :post_number", topic_id: params[:topic_id], post_number: params[:post_number]) if params[:topic_id] && params[:post_number]
     end
 
     def verify_post
-      respond_with_unprocessable("Unable to find post #{params[:post_id]}") unless post
+      respond_with_unprocessable("Unable to find post") unless post
     end
 
     def respond_with_unprocessable(error)
       render json: { errors: error }, status: :unprocessable_entity
+    end
+
+    def get_votes
+        # get the votes from the previous post
+        # add any votes from the current post
     end
   end
 end
