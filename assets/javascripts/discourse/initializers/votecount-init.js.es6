@@ -22,7 +22,6 @@ let topicController;
   api.attachWidgetAction('post-menu', 'clickAlert', function() {
     Votecount.getVotecount(this.attrs.id).then(function(vcJson)
     {
-      console.log(vcJson);
       alert(
         'Votee: ' + vcJson.Votee[0] + ', ' + vcJson.Votee[1] + ', ' + vcJson.Votee[2]);
     });
