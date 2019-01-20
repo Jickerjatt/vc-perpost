@@ -1,4 +1,4 @@
 en:
   js:
-    alert:
-      title: 'show alert'
+    votecount:
+      title: 'Show votes as of this post'
