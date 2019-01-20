@@ -1,4 +1,4 @@
 plugins:
-  alert_enabled:
+  votecount_enabled:
     default: true
     client: true
