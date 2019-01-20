@@ -1,5 +1,6 @@
 import { withPluginApi } from 'discourse/lib/plugin-api'
 import TopicRoute from 'discourse/routes/topic'
+import Votecount from '../lib/votecount'
 
 function initializePlugin(api) {
 let topicController;
@@ -19,7 +20,11 @@ let topicController;
   })
 
   api.attachWidgetAction('post-menu', 'clickAlert', function() {
-    alert('topic title: ' + topicController.get("model.title") + '\npost number: ' + this.attrs.post_number + '\npost id: ' + this.attrs.id );
+    Votecount.getVotecount(this.attrs.id).then(function(vcJson)
+    {
+      alert(
+        'Votee: ' + vcJson.Votee[0] + ', ' + vcJson.Votee[1] + ', ' + vcJson.Votee[2]);
+    });
   })
 }
 
