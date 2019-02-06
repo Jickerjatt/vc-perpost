@@ -2,9 +2,8 @@ import { withPluginApi } from 'discourse/lib/plugin-api'
 import TopicRoute from 'discourse/routes/topic'
 import Votecount from '../lib/votecount'
 
-
 function initializePlugin(api) {
-let topicController;
+  let topicController;
 
   TopicRoute.on("setupTopicController", function(event) {
     topicController = event.controller
@@ -21,8 +20,9 @@ let topicController;
   })
 
   api.attachWidgetAction('post-menu', 'showVotecount', function() {
-    Votecount.getVotecount(this.attrs.topicId, this.attrs.post_number).then(function(vcJson) {
-      var vc = "";
+    var post_number = this.attrs.post_number;
+    Votecount.getVotecount(this.attrs.topicId, post_number).then(function(vcJson) {
+      var vc = "Votes as of post #" + post_number + ":";
       for (var i = 0 ; i < vcJson.votecount.length ; i++){
         vc += "\n" +vcJson.votecount[i].voter + " is voting " + vcJson.votecount[i].votee;
       }
