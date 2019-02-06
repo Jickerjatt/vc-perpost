@@ -31,7 +31,7 @@ function initializePlugin(api) {
         vc += "\n" +vcJson.votecount[i].voter + " is voting " + vcJson.votecount[i].votee;
       }
       sweetalert({
-  text: vc 
+ html: vc 
  });
     });
   })
