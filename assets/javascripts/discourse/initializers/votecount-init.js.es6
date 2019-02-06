@@ -32,9 +32,7 @@ function initializePlugin(api) {
       }
       sweetalert({
   title: "Hi",
-  text: "Hi!",
-  type: "error",
-  confirmButtonText: "Cool" 
+  text: "Hi!" 
  });
     });
   })
