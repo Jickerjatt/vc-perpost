@@ -1,6 +1,10 @@
 import { withPluginApi } from 'discourse/lib/plugin-api'
 import TopicRoute from 'discourse/routes/topic'
 import Votecount from '../lib/votecount'
+import AppController from 'discourse/controllers/application';
+import showModal from 'discourse/lib/show-modal';
+import sweetalert from '../lib/sweetalert2/dist/sweetalert2'
+import { ajax } from 'discourse/lib/ajax';
 
 function initializePlugin(api) {
   let topicController;
