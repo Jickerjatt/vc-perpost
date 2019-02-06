@@ -2,6 +2,7 @@ import { withPluginApi } from 'discourse/lib/plugin-api'
 import TopicRoute from 'discourse/routes/topic'
 import Votecount from '../lib/votecount'
 
+
 function initializePlugin(api) {
 let topicController;
 
@@ -13,9 +14,9 @@ let topicController;
 
     return {
       action: 'showVotecount',
-      icon: 'bath',
+      icon: 'gavel',
       title: 'votecount.title',
-      position: 'last'
+      position: 'first'
     }
   })
 
