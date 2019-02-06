@@ -82,6 +82,19 @@ after_initialize do
       end
 
 
+      # if author is OP, return last post votes
+
+      last_post_votes = get_votes(p_number-1)
+
+      author          = specific_post(p_number).username
+      op              = specific_post(1).username
+
+
+      if(author == op)
+        return last_post_votes
+      end
+
+
       # get entry - if there's a vote use that, otherwise use unvote
 
       vote_value = nil
@@ -90,12 +103,6 @@ after_initialize do
       elsif(v["UNVOTE:"])
         vote_value = NO_VOTE
       end
-
-
-      # get author of current post and votes from prev post and check they're in the array
-
-      author          = specific_post(p_number).username;
-      last_post_votes = get_votes(p_number-1)
 
 
       # check if post author already has a vote registered - if not then add them
