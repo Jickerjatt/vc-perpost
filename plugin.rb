@@ -1,8 +1,11 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 0.0.1
+# version: 0.1
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
+
+require 'rubygems'
+require 'nokogiri'
 
 VOTECOUNT_PLUGIN_NAME ||= "votecount".freeze
 NO_VOTE = 'no one'
@@ -58,18 +61,23 @@ after_initialize do
       end
 
 
-      # regex post and get tags
+      # remove blockquotes
 
-      m = /\[vote\](?<vote>.+)\[\/vote\]|\[v\](?<vote>.+)\[\/v\]|(?<unvote>\[unvote\]).*\[\/unvote\]|(?<reset>\[reset\]).*\[\/reset\]/i.match(specific_post(p_number).raw)
-      v = Hash[]
-      if(m)
-        v = m.named_captures
-      end
+      html  = specific_post(p_number).cooked
+      doc   = Nokogiri::HTML.parse(html)
+
+      doc.search('blockquote').remove
+
+      elements = doc.xpath("//span[@class='vote']")
+
+
+      # split array of elements into hash of tag: value
+      v = Hash[elements.collect { |element| element.text.split(" ", 2) } ]
 
 
       # if reset, return
 
-      if(v["reset"])
+      if(v.has_key? 'RESET')
         return []
       end
 
@@ -77,12 +85,11 @@ after_initialize do
       # get entry - if there's a vote use that, otherwise use unvote
 
       vote_value = nil
-      if(v["vote"])
-        vote_value = v["vote"]
-      elsif(v["unvote"])
+      if(v["VOTE:"])
+        vote_value = v["VOTE:"]
+      elsif(v["UNVOTE:"])
         vote_value = NO_VOTE
       end
-
 
 
       # get author of current post and votes from prev post and check they're in the array
