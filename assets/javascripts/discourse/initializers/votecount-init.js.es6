@@ -30,7 +30,12 @@ function initializePlugin(api) {
       for (var i = 0 ; i < vcJson.votecount.length ; i++){
         vc += "\n" +vcJson.votecount[i].voter + " is voting " + vcJson.votecount[i].votee;
       }
-      alert(vc);
+      sweetalert({
+  title: "Hi",
+  text: "Hi!",
+  type: "error",
+  confirmButtonText: "Cool" 
+ });
     });
   })
 }
