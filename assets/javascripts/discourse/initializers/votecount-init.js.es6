@@ -28,7 +28,7 @@ function initializePlugin(api) {
     Votecount.getVotecount(this.attrs.topicId, post_number).then(function(vcJson) {
       var vc = "Votes as of post #" + post_number + ":";
       for (var i = 0 ; i < vcJson.votecount.length ; i++){
-        vc += "<br/>" + "<b>" + vcJson.votecount[i].voter + "</b>" + " is voting " + "<b>" + vcJson.votecount[i].votee.replace(/</g, "&lt;").replace(/>/g, "&gt;"); + "</b>";
+        vc += "<br/>" + "<b>" + vcJson.votecount[i].voter + "</b>" + " is voting " + "<b>" + vcJson.votecount[i].votee.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</b>";
       }
       sweetalert({
  html: vc 
