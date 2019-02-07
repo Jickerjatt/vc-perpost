@@ -61,7 +61,16 @@ after_initialize do
       end
 
 
+      # get last post votes
+
+      last_post_votes = get_votes(p_number-1)
+
+
       # remove blockquotes
+
+      if(! specific_post(p_number))
+        return last_post_votes
+      end
 
       html  = specific_post(p_number).cooked
       doc   = Nokogiri::HTML.parse(html)
@@ -72,6 +81,7 @@ after_initialize do
 
 
       # split array of elements into hash of tag: value
+
       v = Hash[elements.collect { |element| element.text.split(" ", 2) } ]
 
 
@@ -83,8 +93,6 @@ after_initialize do
 
 
       # if author is OP, return last post votes
-
-      last_post_votes = get_votes(p_number-1)
 
       author          = specific_post(p_number).username
       op              = specific_post(1).username
