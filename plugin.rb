@@ -102,7 +102,7 @@ after_initialize do
         vote_value = nil
         if(v["VOTE:"])
           vote_value = v["VOTE:"]
-        elsif(v["UNVOTE:"])
+        elsif(v["UNVOTE"])
           vote_value = NO_VOTE
         end
 
