@@ -1,6 +1,6 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 0.1
+# version: 1.0
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
 
@@ -63,75 +63,81 @@ after_initialize do
 
       # remove blockquotes
 
-      html  = specific_post(p_number).cooked
-      doc   = Nokogiri::HTML.parse(html)
+      if(specific_post(p_number))
 
-      doc.search('blockquote').remove
+        html  = specific_post(p_number).cooked
+        doc   = Nokogiri::HTML.parse(html)
 
-      elements = doc.xpath("//span[@class='vote']")
+        doc.search('blockquote').remove
 
-
-      # split array of elements into hash of tag: value
-      v = Hash[elements.collect { |element| element.text.split(" ", 2) } ]
+        elements = doc.xpath("//span[@class='vote']")
 
 
-      # if reset, return
+        # split array of elements into hash of tag: value
 
-      if(v.has_key? 'RESET')
-        return []
-      end
+        v = Hash[elements.collect { |element| element.text.split(" ", 2) } ]
 
 
-      # if author is OP, return last post votes
+        # if reset, return
 
-      last_post_votes = get_votes(p_number-1)
-
-      author          = specific_post(p_number).username
-      op              = specific_post(1).username
-
-
-      if(author == op)
-        return last_post_votes
-      end
+        if(v.has_key? 'RESET')
+          return []
+        end
 
 
-      # get entry - if there's a vote use that, otherwise use unvote
+        # if author is OP, return last post votes
 
-      vote_value = nil
-      if(v["VOTE:"])
-        vote_value = v["VOTE:"]
-      elsif(v["UNVOTE:"])
-        vote_value = NO_VOTE
-      end
+        last_post_votes = get_votes(p_number-1)
+        author          = specific_post(p_number).username
+        op              = specific_post(1).username
 
 
-      # check if post author already has a vote registered - if not then add them
+        if(author == op)
+          return last_post_votes
+        end
 
-      present = false
-      last_post_votes.each  do | item |
 
-        if(item["voter"] == author)
+        # get entry - if there's a vote use that, otherwise use unvote
 
-          present = true
-          if(vote_value)
-            item["votee"] = vote_value
-            break
+        vote_value = nil
+        if(v["VOTE:"])
+          vote_value = v["VOTE:"]
+        elsif(v["UNVOTE:"])
+          vote_value = NO_VOTE
+        end
+
+
+        # check if post author already has a vote registered - if not then add them
+
+        present = false
+        last_post_votes.each  do | item |
+
+          if(item["voter"] == author)
+
+            present = true
+            if(vote_value)
+              item["votee"] = vote_value
+              break
+
+            end
 
           end
 
         end
 
-      end
-
-      if(!present)
-        if(vote_value)
-          last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
-        else
-          last_post_votes.push(Hash["voter" => author, "votee" => NO_VOTE])
+        if(!present)
+          if(vote_value)
+            last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
+          else
+            last_post_votes.push(Hash["voter" => author, "votee" => NO_VOTE])
+          end
         end
-      end
 
-      return last_post_votes
+        return last_post_votes
+
+      else
+        return get_votes(p_number-1)
+      end
 
     end
   end
