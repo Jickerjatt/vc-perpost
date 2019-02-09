@@ -94,9 +94,11 @@ after_initialize do
 
         # get last entry in array
 
-        vote_type, *vote_value = elements.last.text.split(" ", 2)
-        if(vote_type == "UNVOTE")
-          vote_value = NO_VOTE
+        if(elements.last)
+          vote_type, *vote_value = elements.last.text.split(" ", 2)
+          if(vote_type == "UNVOTE")
+            vote_value = NO_VOTE
+          end
         end
 
 
