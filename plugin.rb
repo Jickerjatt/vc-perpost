@@ -1,6 +1,6 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 1.0
+# version: 1.0.1
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
 
@@ -61,7 +61,7 @@ after_initialize do
       end
 
 
-      # remove blockquotes
+      # remove blockquotes and get all spans with vote class
 
       if(specific_post(p_number))
 
@@ -73,14 +73,9 @@ after_initialize do
         elements = doc.xpath("//span[@class='vote']")
 
 
-        # split array of elements into hash of tag: value
-
-        v = Hash[elements.collect { |element| element.text.split(" ", 2) } ]
-
-
         # if reset, return
 
-        if(v.has_key? 'RESET')
+        if(elements.any? { |element| element.text == 'RESET' })
           return []
         end
 
@@ -97,12 +92,10 @@ after_initialize do
         end
 
 
-        # get entry - if there's a vote use that, otherwise use unvote
+        # get last entry in array
 
-        vote_value = nil
-        if(v["VOTE:"])
-          vote_value = v["VOTE:"]
-        elsif(v.has_key? 'UNVOTE')
+        vote_type, *vote_value = elements.last.text.split(" ", 2)
+        if(vote_type == "UNVOTE")
           vote_value = NO_VOTE
         end
 
