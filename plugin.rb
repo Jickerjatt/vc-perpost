@@ -95,9 +95,11 @@ after_initialize do
         # get last entry in array
 
         if(elements.last)
-          vote_type, *vote_value = elements.last.text.split(" ", 2)
+          vote_type, vote_value = elements.last.text.split(" ", 2)
           if(vote_type == "UNVOTE")
             vote_value = NO_VOTE
+          else
+            vote_value = ActionController::Base.helpers.strip_tags(vote_value)
           end
         end
 
