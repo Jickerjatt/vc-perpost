@@ -1,6 +1,6 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 1.0.1
+# version: 1.0.2
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
 
@@ -103,15 +103,23 @@ after_initialize do
 
 
         # check if post author already has a vote registered - if not then add them
+        # maintain order by removing existing entry if they already have one
 
         present = false
         last_post_votes.each  do | item |
 
           if(item["voter"] == author)
 
+            # author is already in the list
             present = true
-            if(vote_value)
-              item["votee"] = vote_value
+
+            if(vote_value) # author has made a new action
+
+              # delete old action and replace with new one
+
+              last_post_votes.delete(item)
+              last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
+
               break
 
             end
@@ -120,10 +128,10 @@ after_initialize do
 
         end
 
-        if(!present)
-          if(vote_value)
+        if(! present)
+          if(vote_value) # author has made an action
             last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
-          else
+          else # author has not made an action
             last_post_votes.push(Hash["voter" => author, "votee" => NO_VOTE])
           end
         end
