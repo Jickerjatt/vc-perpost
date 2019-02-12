@@ -1,6 +1,6 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 1.0
+# version: 1.0.2
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
 
@@ -61,7 +61,7 @@ after_initialize do
       end
 
 
-      # remove blockquotes
+      # remove blockquotes and get all spans with vote class
 
       if(specific_post(p_number))
 
@@ -73,14 +73,9 @@ after_initialize do
         elements = doc.xpath("//span[@class='vote']")
 
 
-        # split array of elements into hash of tag: value
-
-        v = Hash[elements.collect { |element| element.text.split(" ", 2) } ]
-
-
         # if reset, return
 
-        if(v.has_key? 'RESET')
+        if(elements.any? { |element| element.text == 'RESET' })
           return []
         end
 
@@ -97,26 +92,36 @@ after_initialize do
         end
 
 
-        # get entry - if there's a vote use that, otherwise use unvote
+        # get last entry in array
 
-        vote_value = nil
-        if(v["VOTE:"])
-          vote_value = v["VOTE:"]
-        elsif(v["UNVOTE:"])
-          vote_value = NO_VOTE
+        if(elements.last)
+          vote_type, vote_value = elements.last.text.split(" ", 2)
+          if(vote_type == "UNVOTE")
+            vote_value = NO_VOTE
+          else
+            vote_value = ActionController::Base.helpers.strip_tags(vote_value)
+          end
         end
 
 
         # check if post author already has a vote registered - if not then add them
+        # maintain order by removing existing entry if they already have one
 
         present = false
         last_post_votes.each  do | item |
 
           if(item["voter"] == author)
 
+            # author is already in the list
             present = true
-            if(vote_value)
-              item["votee"] = vote_value
+
+            if(vote_value) # author has made a new action
+
+              # delete old action and replace with new one
+
+              last_post_votes.delete(item)
+              last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
+
               break
 
             end
@@ -125,10 +130,10 @@ after_initialize do
 
         end
 
-        if(!present)
-          if(vote_value)
+        if(! present)
+          if(vote_value) # author has made an action
             last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
-          else
+          else # author has not made an action
             last_post_votes.push(Hash["voter" => author, "votee" => NO_VOTE])
           end
         end
