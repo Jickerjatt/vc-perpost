@@ -29,10 +29,10 @@ function initializePlugin(api) {
       var vc = "Votes as of post #" + post_number + ":";
       for (var i = 0 ; i < vcJson.votecount.length ; i++){
         if(vcJson.votecount[i].post){
-          vc += "<br/><b>" + vcJson.votecount[i].voter + "</b>" + " is voting " + "<b>" + vcJson.votecount[i].votee + "</b>";
+          vc += "<br/><b>" + vcJson.votecount[i].voter + "</b>" + " is voting " + "<b>" + vcJson.votecount[i].votee + "</b>, in post #" + vcJson.votecount[i].post;
         }
         else{
-          vc += "<br/><b>" + vcJson.votecount[i].voter + "</b>" + " is voting " + "<b>" + vcJson.votecount[i].votee + "</b>, in post #" + vcJson.votecount[i].post;
+          vc += "<br/><b>" + vcJson.votecount[i].voter + "</b>" + " is voting " + "<b>" + vcJson.votecount[i].votee + "</b>";
         }
       }
       sweetalert({
