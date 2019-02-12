@@ -120,7 +120,7 @@ after_initialize do
               # delete old action and replace with new one
 
               last_post_votes.delete(item)
-              last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
+              last_post_votes.push(Hash["voter" => author, "votee" => vote_value, "post" => p_number])
 
               break
 
@@ -132,7 +132,7 @@ after_initialize do
 
         if(! present)
           if(vote_value) # author has made an action
-            last_post_votes.push(Hash["voter" => author, "votee" => vote_value])
+            last_post_votes.push(Hash["voter" => author, "votee" => vote_value, "post" => p_number])
           else # author has not made an action
             last_post_votes.push(Hash["voter" => author, "votee" => NO_VOTE])
           end
