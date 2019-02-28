@@ -93,14 +93,16 @@ after_initialize do
           votes = []
           vote_lines.each do |line|
             # get line data
-            # TODO: strip out anything in parens, commas, colon
 
-            players = line.split(" ")
-            votee = players.shift
-
-            players.each do |voter|
-              # create entry in return array
-              votes.push(Hash["voter" => voter, "votee" => votee])
+            votee, players = line.split(":", 2)
+            unless players.to_s.strip.empty?
+              if(votee.downcase.eql? "not voting")
+                votee = NO_VOTE
+              end
+              players.split(",").each do |voter|
+                # create entry in return array
+                votes.push(Hash["voter" => voter, "votee" => votee])
+              end
             end
           end
           return votes
