@@ -103,7 +103,7 @@ after_initialize do
               end
               players.split(",").each do |voter|
                 # create entry in return array
-                votes.push(Hash["voter" => voter, "votee" => votee])
+                votes.push(Hash["voter" => voter.strip, "votee" => votee.strip])
               end
             end
           end
