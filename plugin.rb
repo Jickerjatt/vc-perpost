@@ -94,6 +94,8 @@ after_initialize do
           vote_lines.each do |line|
             # get line data
 
+            # remove parentheses containing totals
+            line.gsub!(/\(.*\)/, "")
             votee, players = line.split(":", 2)
             unless players.to_s.strip.empty?
               if(votee.downcase.eql? "not voting")
