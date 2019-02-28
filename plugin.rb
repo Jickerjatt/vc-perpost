@@ -98,7 +98,7 @@ after_initialize do
             line.gsub!(/\(.*\)/, "")
             votee, players = line.split(":", 2)
             unless players.to_s.strip.empty?
-              if(votee.downcase.eql? "not voting")
+              if(votee.strip.downcase.eql? "not voting")
                 votee = NO_VOTE
               end
               players.split(",").each do |voter|
