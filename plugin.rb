@@ -61,7 +61,7 @@ after_initialize do
       end
 
 
-      # remove blockquotes and get all spans with vote class
+      # remove blockquotes and get all vote/votecount class elements
 
       if(specific_post(p_number))
 
@@ -70,21 +70,50 @@ after_initialize do
 
         doc.search('blockquote').remove
 
-        elements = doc.xpath("//span[@class='vote']")
+        vote_elements   = doc.xpath("//span[@class='vote']")
+        vc_elements     = doc.xpath("//div[@class='votecount']")
 
 
         # if reset, return
 
-        if(elements.any? { |element| element.text == 'RESET' })
+        author          = specific_post(p_number).username
+        op              = specific_post(1).username
+
+        if(vote_elements.any? { |element| element.text == 'RESET' } && author == op)
           return []
+        end
+
+
+        # posts should only contain one votecount - but we'll take the last just in case
+        # if there is a vc tag made by the author use that to set votes
+
+        if(vc_elements.last && author == op)
+          stripped = ActionController::Base.helpers.strip_tags(vc_elements.last.text)
+          vote_lines = stripped.split("\n")
+          votes = []
+          vote_lines.each do |line|
+            # get line data
+
+            # remove parentheses containing totals
+            line.gsub!(/\(.*\)/, "")
+            votee, players = line.split(":", 2)
+            unless players.to_s.strip.empty?
+              if(votee.downcase.eql? "not voting")
+                votee = NO_VOTE
+              end
+              players.split(",").each do |voter|
+                # create entry in return array
+                votes.push(Hash["voter" => voter, "votee" => votee])
+              end
+            end
+          end
+          return votes
         end
 
 
         # if author is OP, return last post votes
 
-        last_post_votes = get_votes(p_number-1)
-        author          = specific_post(p_number).username
-        op              = specific_post(1).username
+        last_post_votes = get_votes(p_number-1) # recursive call
 
 
         if(author == op)
@@ -94,8 +123,8 @@ after_initialize do
 
         # get last entry in array
 
-        if(elements.last)
-          vote_type, vote_value = elements.last.text.split(" ", 2)
+        if(vote_elements.last)
+          vote_type, vote_value = vote_elements.last.text.split(" ", 2)
           if(vote_type == "UNVOTE")
             vote_value = NO_VOTE
           else
