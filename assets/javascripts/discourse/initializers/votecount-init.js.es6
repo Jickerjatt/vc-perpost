@@ -36,8 +36,16 @@ function initializePlugin(api) {
         }
       }
       sweetalert({
- html: vc 
- });
+ html: vc, 
+ confirmButtonColor: '#3085d6',
+ confirmButtonText: 'Classic View'
+ }).then((result) => {
+  if (result.value) {
+    sweetalert({
+      html: vc
+ })
+  }
+});
     });
   })
 }
