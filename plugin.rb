@@ -8,7 +8,7 @@ require 'rubygems'
 require 'nokogiri'
 
 VOTECOUNT_PLUGIN_NAME ||= "votecount".freeze
-NO_VOTE = 'no one'
+NO_VOTE = 'NO_VOTE'
 
 enabled_site_setting :votecount_enabled
 
