@@ -97,7 +97,7 @@ function initializePlugin(api) {
             html: vc,
             showConfirmButton: false,
             showCancelButton: true,
-            cancelButtonText: 'Close',
+            cancelButtonText: 'That\'s all for now!',
           })
         }
         })
