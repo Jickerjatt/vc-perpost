@@ -25,7 +25,7 @@ function initializePlugin(api) {
   })
 
 
-  api.attachWidgetAction('post-menu', 'showVotecount', function() {
+ api.attachWidgetAction('post-menu', 'showVotecount', function() {
     var post_number = this.attrs.post_number;
     Votecount.getVotecount(this.attrs.topicId, post_number).then(function(vcJson) {
 
@@ -58,10 +58,51 @@ function initializePlugin(api) {
           sweetalert({
             title: vc_title,
             html: vc,
-            showConfirmButton: false,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'List View',
             showCancelButton: true,
             cancelButtonText: 'Close',
+          }).then((result) => {
+        if (result.value) {
+
+          // create html
+
+          var votes_title  = "Votes as of post #" + post_number;
+          var votes = getVotesHtml(vcJson.votecount);
+
+
+        sweetalert({
+            html: votes,
+            title: votes_title,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'Classic View',
+            showCancelButton: true,
+            cancelButtonText: 'Close',
+        }).then((result) => {
+        if (result.value) {
+
+          // reformat object
+
+          var vc_obj = getVotecountObj(vcJson.votecount);
+
+
+          // create html
+
+          var vc_title = "Votecount as of post #" + post_number;
+          var vc = getVotecountHtml(vc_obj);
+
+
+          sweetalert({
+            title: vc_title,
+            html: vc,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'That\'s all for now!',
           })
+        }
+        })
+        }
+       })
         }
       });
     });
