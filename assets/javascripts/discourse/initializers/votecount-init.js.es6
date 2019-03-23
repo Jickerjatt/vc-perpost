@@ -44,15 +44,15 @@ function initializePlugin(api) {
       }).then((result) => {
         if (result.value) {
 
-          // reformat object
+          // reformat array
 
-          var vc_obj = getVotecountObj(vcJson.votecount);
+          var vc_arr = getVotecountArr(vcJson.votecount);
 
 
           // create html
 
           var vc_title = "Votecount as of post #" + post_number;
-          var vc = getVotecountHtml(vc_obj);
+          var vc = getVotecountHtml(vc_arr);
 
 
           sweetalert({
@@ -63,46 +63,46 @@ function initializePlugin(api) {
             showCancelButton: true,
             cancelButtonText: 'Close',
           }).then((result) => {
-        if (result.value) {
+            if (result.value) {
 
-          // create html
+              // create html
 
-          var votes_title  = "Votes as of post #" + post_number;
-          var votes = getVotesHtml(vcJson.votecount);
-
-
-        sweetalert({
-            html: votes,
-            title: votes_title,
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'Classic View',
-            showCancelButton: true,
-            cancelButtonText: 'Close',
-        }).then((result) => {
-        if (result.value) {
-
-          // reformat object
-
-          var vc_obj = getVotecountObj(vcJson.votecount);
+              var votes_title  = "Votes as of post #" + post_number;
+              var votes = getVotesHtml(vcJson.votecount);
 
 
-          // create html
+              sweetalert({
+                  html: votes,
+                  title: votes_title,
+                  confirmButtonColor: '#3085d6',
+                  confirmButtonText: 'Classic View',
+                  showCancelButton: true,
+                  cancelButtonText: 'Close',
+              }).then((result) => {
+                if (result.value) {
 
-          var vc_title = "Votecount as of post #" + post_number;
-          var vc = getVotecountHtml(vc_obj);
+                  // reformat array
+
+                  var vc_arr = getVotecountArr(vcJson.votecount);
 
 
-          sweetalert({
-            title: vc_title,
-            html: vc,
-            showConfirmButton: false,
-            showCancelButton: true,
-            cancelButtonText: 'That\'s all for now!',
+                  // create html
+
+                  var vc_title = "Votecount as of post #" + post_number;
+                  var vc = getVotecountHtml(vc_arr);
+
+
+                  sweetalert({
+                    title: vc_title,
+                    html: vc,
+                    showConfirmButton: false,
+                    showCancelButton: true,
+                    cancelButtonText: 'That\'s all for now!',
+                  })
+                }
+              })
+            }
           })
-        }
-        })
-        }
-       })
         }
       });
     });
@@ -110,24 +110,40 @@ function initializePlugin(api) {
 }
 
 
-function getVotecountObj(votes_arr){
-  // restructure array of votes into {votee: [voter, voter, voter]}
+function getVotecountArr(votes_arr){
+  // restructure array of votes into votee: [voter, voter, voter]
 
-  var vc_obj = {};
+  var vc_arr = [];
 
   for (var i = 0 ; i < votes_arr.length ; i++){
     var votee = votes_arr[i].votee;
     var voter = votes_arr[i].voter;
 
-    if(vc_obj.hasOwnProperty(votee)){
-      vc_obj[votee].push(voter);
+    var exists = false;
+
+
+    // go through vc_arr to see if case insensitive votee is present
+
+    for (var j = 0 ; j < vc_arr.length ; j++){
+      if(vc_arr[j]['votee'].toLowerCase() === votee.toLowerCase()){
+        vc_arr[j]['voters'].push(voter);
+        exists = true;
+      }
     }
-    else{
-      vc_obj[votee] = [voter];
+
+    // if votee is not already in array, insert object with votee and voters as keys
+
+    if(!exists){
+      vc_arr.push({'votee': votee, 'voters': [voter]});
     }
   }
 
-  return(vc_obj);
+
+  // return array of votes in order of most voters to least
+
+  vc_arr = vc_arr.sort(function(a, b) {return (b['voters'].length - a['voters'].length)});
+
+  return(vc_arr);
 }
 
 
@@ -155,29 +171,33 @@ function getVotesHtml(votes_arr){
 }
 
 
-function getVotecountHtml(vc_obj){
-  // get classic votecount html from vc_obj
+function getVotecountHtml(vc_arr){
+  // get classic votecount html from vc_arr
 
   var vc = "<div align=left>";
   var not_voting;
 
-  for (var votee in vc_obj) {
-    if( vc_obj.hasOwnProperty(votee) ) {
-      if(votee == 'NO_VOTE'){
-        // remember this index and skip for now
-        not_voting = vc_obj[votee];
+  for (var i = 0 ; i < vc_arr.length ; i++) {
+    var line = vc_arr[i];
+
+    if(line['votee'] == 'NO_VOTE'){
+
+      // remember this item and skip for now
+      not_voting = line['voters'];
+
+    }
+    else{
+
+      var voters  = line['voters'];
+      var votee   = line['votee'];
+
+      vc += "<br/><b>" + votee + " (" + voters.length + "):</b>";
+
+      for (var j = 0 ; j < voters.length-1 ; j++){
+        vc += " " + voters[j] + ",";
       }
-      else{
 
-        var voters = vc_obj[votee];
-        vc += "<br/><b>" + votee + " (" + voters.length + "):</b>";
-
-        for (var i = 0 ; i < voters.length-1 ; i++){
-          vc += " " + voters[i] + ",";
-        }
-
-        vc += " " + voters[voters.length - 1];
-      }
+      vc += " " + voters[voters.length - 1];
     }
   }
   if(not_voting){
