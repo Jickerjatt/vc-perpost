@@ -125,7 +125,7 @@ function getVotecountArr(votes_arr){
     // go through vc_arr to see if case insensitive votee is present
 
     for (var j = 0 ; j < vc_arr.length ; j++){
-      if(vc_arr[j]['votee'].toLowerCase() === votee.toLowerCase()){
+      if(vc_arr[j]['votee'].toLowerCase().replace(/\s/g,'') === votee.toLowerCase().replace(/\s/g,'')){
         vc_arr[j]['voters'].push(voter);
         exists = true;
       }

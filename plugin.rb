@@ -1,6 +1,6 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 1.0.2
+# version: 1.1.0
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
 
