@@ -1,6 +1,6 @@
 # name: votecount
 # about: Plugin for Discourse to show votecount for Mafia games (for Mafia451)
-# version: 1.1.0
+# version: 1.2.0
 # authors: KC Maddever (kcereru)
 # url: https://github.com/kcereru/votecount
 
@@ -129,6 +129,7 @@ after_initialize do
             vote_value = NO_VOTE
           else
             vote_value = ActionController::Base.helpers.strip_tags(vote_value)
+            vote_value.gsub!('@', '') if vote_value
           end
         end
 
