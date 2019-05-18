@@ -29,84 +29,107 @@ function initializePlugin(api) {
     var post_number = this.attrs.post_number;
     Votecount.getVotecount(this.attrs.topicId, post_number).then(function(vcJson) {
 
+      // reformat array
+
+      var vc_arr = getVotecountArr(vcJson.votecount);
+
+
       // create html
 
-      var votes_title   = "Votes as of post #" + post_number;
-      var votes         = getVotesHtml(vcJson.votecount);
+      var vc_title = "Votecount as of post #" + post_number;
+      var vc = getVotecountHtml(vc_arr);
+
 
       sweetalert({
-        html: votes,
-        title: votes_title,
+        title: vc_title,
+        html: vc,
         confirmButtonColor: '#3085d6',
-        confirmButtonText: 'Classic View',
+        confirmButtonText: 'List View',
         showCancelButton: true,
         cancelButtonText: 'Close',
       }).then((result) => {
         if (result.value) {
 
-          // reformat array
-
-          var vc_arr = getVotecountArr(vcJson.votecount);
-
-
           // create html
 
-          var vc_title = "Votecount as of post #" + post_number;
-          var vc = getVotecountHtml(vc_arr);
-
+          var votes_title   = "Votes as of post #" + post_number;
+          var votes         = getVotesHtml(vcJson.votecount);
 
           sweetalert({
-            title: vc_title,
-            html: vc,
+            html: votes,
+            title: votes_title,
             confirmButtonColor: '#3085d6',
-            confirmButtonText: 'List View',
+            confirmButtonText: 'Classic View',
             showCancelButton: true,
             cancelButtonText: 'Close',
           }).then((result) => {
             if (result.value) {
 
+              // reformat array
+
+              var vc_arr = getVotecountArr(vcJson.votecount);
+
+
               // create html
 
-              var votes_title  = "Votes as of post #" + post_number;
-              var votes = getVotesHtml(vcJson.votecount);
+              var vc_title = "Votecount as of post #" + post_number;
+              var vc = getVotecountHtml(vc_arr);
 
 
               sweetalert({
-                  html: votes,
-                  title: votes_title,
-                  confirmButtonColor: '#3085d6',
-                  confirmButtonText: 'Classic View',
-                  showCancelButton: true,
-                  cancelButtonText: 'Close',
+                title: vc_title,
+                html: vc,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'List View',
+                showCancelButton: true,
+                cancelButtonText: 'Close',
               }).then((result) => {
                 if (result.value) {
 
-                  // reformat array
-
-                  var vc_arr = getVotecountArr(vcJson.votecount);
-
-
                   // create html
 
-                  var vc_title = "Votecount as of post #" + post_number;
-                  var vc = getVotecountHtml(vc_arr);
+                  var votes_title  = "Votes as of post #" + post_number;
+                  var votes = getVotesHtml(vcJson.votecount);
 
 
                   sweetalert({
-                    title: vc_title,
-                    html: vc,
-                    showConfirmButton: false,
-                    showCancelButton: true,
-                    cancelButtonText: 'That\'s all for now!',
-                  })
+                      html: votes,
+                      title: votes_title,
+                      confirmButtonColor: '#3085d6',
+                      confirmButtonText: 'Classic View',
+                      showCancelButton: true,
+                      cancelButtonText: 'Close',
+                  }).then((result) => {
+                    if (result.value) {
+
+                      // reformat array
+
+                      var vc_arr = getVotecountArr(vcJson.votecount);
+
+
+                      // create html
+
+                      var vc_title = "Votecount as of post #" + post_number;
+                      var vc = getVotecountHtml(vc_arr);
+
+
+                      sweetalert({
+                        title: vc_title,
+                        html: vc,
+                        showConfirmButton: false,
+                        showCancelButton: true,
+                        cancelButtonText: 'That\'s all for now!',
+                      });
+                    }
+                  });
                 }
-              })
+              });
             }
-          })
+          });
         }
       });
     });
-  })
+  });
 }
 
 
