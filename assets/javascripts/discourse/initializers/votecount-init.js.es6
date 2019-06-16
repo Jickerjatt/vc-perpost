@@ -29,9 +29,11 @@ function initializePlugin(api) {
     var post_number = this.attrs.post_number;
     Votecount.getVotecount(this.attrs.topicId, post_number).then(function(vcJson) {
 
+      var alive_players = vcJson.alive;
+
       // reformat array
 
-      var vc_arr = getVotecountArr(vcJson.votecount);
+      var vc_arr = getVotecountArr(vcJson.votecount, alive_players);
 
 
       // create html
@@ -67,7 +69,7 @@ function initializePlugin(api) {
 
               // reformat array
 
-              var vc_arr = getVotecountArr(vcJson.votecount);
+              var vc_arr = getVotecountArr(vcJson.votecount, alive_players);
 
 
               // create html
@@ -104,7 +106,7 @@ function initializePlugin(api) {
 
                       // reformat array
 
-                      var vc_arr = getVotecountArr(vcJson.votecount);
+                      var vc_arr = getVotecountArr(vcJson.votecount, alive_players);
 
 
                       // create html
@@ -133,22 +135,22 @@ function initializePlugin(api) {
 }
 
 
-function getVotecountArr(votes_arr){
+function getVotecountArr(votes_arr, alive_players){
   // restructure array of votes into votee: [voter, voter, voter]
 
   var vc_arr = [];
 
   for (var i = 0 ; i < votes_arr.length ; i++){
-    var votee = votes_arr[i].votee;
+    var votee = transformMalformedVote(votes_arr[i].votee, alive_players);
     var voter = votes_arr[i].voter;
 
     var exists = false;
 
 
-    // go through vc_arr to see if case insensitive votee is present
+    // go through vc_arr to see if votee is present
 
     for (var j = 0 ; j < vc_arr.length ; j++){
-      if(vc_arr[j]['votee'].toLowerCase().replace(/\s/g,'') === votee.toLowerCase().replace(/\s/g,'')){
+      if(standardiseVote(vc_arr[j]['votee']) === standardiseVote(votee)){
         vc_arr[j]['voters'].push(voter);
         exists = true;
       }
@@ -236,6 +238,32 @@ function getVotecountHtml(vc_arr){
   vc += "</div>";
 
   return(vc);
+}
+
+function transformMalformedVote(vote, alive_players) {
+  // check if a vote is supposed to be for a living player, and if so return the correct player name
+
+  for (var i = 0 ; i < alive_players.length ; i++){
+      if(standardiseVote(alive_players[i]) === standardiseVote(vote)){
+        return(alive_players[i]);
+      }
+  }
+
+  // check if the vote is a substring of any valid players
+
+  for (var i = 0 ; i < alive_players.length ; i++){
+      if(standardiseVote(alive_players[i]).includes(standardiseVote(vote))){
+        return(alive_players[i]);
+      }
+  }
+
+  // if no matches, leave the vote as is
+  return(vote);
+}
+
+function standardiseVote(vote) {
+  // lowercase, strip out spaces and @ symbol for comparing votes against each other
+  return(vote.toLowerCase().replace(/\s/g,'').replace(/@/g,''))
 }
 
 

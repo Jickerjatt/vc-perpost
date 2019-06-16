@@ -31,7 +31,7 @@ after_initialize do
   class ::Votecount::VotecountController < ApplicationController
 
     def get_latest
-        render json: get_votes(params[:post_number].to_i)
+        render json: Hash["votecount" => get_votes(params[:post_number].to_i), "alive" => get_living()]
     end
 
     private
@@ -50,6 +50,31 @@ after_initialize do
 
     def respond_with_unprocessable(error)
       render json: { errors: error }, status: :unprocessable_entity
+    end
+
+    def get_living
+        html  = specific_post(1).cooked
+        doc   = Nokogiri::HTML.parse(html)
+
+        alive_elements  = doc.xpath("//div[@class='alive']")
+
+        if(!alive_elements.last)
+          return []
+        end
+
+        stripped        = ActionController::Base.helpers.strip_tags(alive_elements.last.text)
+        players         = stripped.split("\n")
+
+
+        # remove @
+
+        players.map! {|player| player.tr('@', '')}
+
+
+        # don't return empty lines
+
+        return players.reject(&:blank?)
+
     end
 
     def get_votes(p_number)
