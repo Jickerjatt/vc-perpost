@@ -1,5 +1,4 @@
 import { withPluginApi } from 'discourse/lib/plugin-api'
-import TopicRoute from 'discourse/routes/topic'
 import Votecount from '../lib/votecount'
 import AppController from 'discourse/controllers/application';
 import showModal from 'discourse/lib/show-modal';
@@ -7,12 +6,6 @@ import sweetalert from '../lib/sweetalert2/dist/sweetalert2'
 import { ajax } from 'discourse/lib/ajax';
 
 function initializePlugin(api) {
-  let topicController;
-
-  TopicRoute.on("setupTopicController", function(event) {
-    topicController = event.controller
-  })
-
 
   api.addPostMenuButton('votecount', attrs => {
 
@@ -269,7 +262,7 @@ function standardiseVote(vote) {
 
 export default {
   name: 'votecount-button',
-  initialize: function() {
-    withPluginApi('0.8.6', api => initializePlugin(api))
+  initialize: function(container) {
+    withPluginApi('0.8.6', api => initializePlugin(api, container))
   }
 }
