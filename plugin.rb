@@ -31,7 +31,7 @@ after_initialize do
   class ::Votecount::VotecountController < ApplicationController
 
     def get_latest
-        render json: Hash["votecount" => get_votes(params[:post_number].to_i), "alive" => get_living()]
+      render json: Hash["votecount" => get_votes(params[:post_number].to_i), "alive" => get_living(params[:post_number].to_i)]
     end
 
     private
@@ -52,34 +52,40 @@ after_initialize do
       render json: { errors: error }, status: :unprocessable_entity
     end
 
-    def get_living
-        html  = specific_post(1).cooked
-        doc   = Nokogiri::HTML.parse(html)
+    def get_living(p_number)
 
-        alive_elements  = doc.xpath("//div[@class='alive']")
 
-        if(!alive_elements.last)
+      html  = specific_post(p_number).cooked
+      doc   = Nokogiri::HTML.parse(html)
+
+      alive_elements  = doc.xpath("//div[@class='alive']")
+
+      if(!alive_elements.last)
+        if(p_number == 1)
           return []
+        else
+          return get_living(p_number-1) # recursive call
         end
+      end
 
-        stripped        = ActionController::Base.helpers.strip_tags(alive_elements.last.text)
-        players         = stripped.split("\n")
-
-
-        # remove @
-
-        players.map! {|player| player.tr('@', '')}
+      stripped        = ActionController::Base.helpers.strip_tags(alive_elements.last.text)
+      players         = stripped.split("\n")
 
 
-        # don't return empty lines
+      # remove @
 
-        return players.reject(&:blank?)
+      players.map! {|player| player.tr('@', '')}
+
+
+      # don't return empty lines
+
+      return players.reject(&:blank?)
 
     end
 
-    def get_default_votes
+    def get_default_votes(p_number)
       votes = []
-      alive = get_living()
+      alive = get_living(p_number)
       alive.each do |voter|
         votes.push({ 'voter' => voter, 'votes' => [ NO_VOTE ]})
       end
@@ -91,7 +97,7 @@ after_initialize do
       # if no previous post, return
 
       if(p_number == 1)
-        return get_default_votes()
+        return get_default_votes(p_number)
       end
 
       # if post is not made by a player or the host, ignore
@@ -113,10 +119,10 @@ after_initialize do
 
         author          = specific_post(p_number).username
         op              = specific_post(1).username
-        alive           = get_living()
+        alive           = get_living(p_number)
 
         if(vote_elements.any? { |element| element.text == 'RESET' } && author == op)
-          return get_default_votes
+          return get_default_votes(p_number)
         end
 
 
