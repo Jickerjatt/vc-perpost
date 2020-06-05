@@ -176,7 +176,7 @@ function getVotesHtml(votes_arr){
 
   for (var i = 0 ; i < votes_arr.length ; i++){
     var voter = votes_arr[i].voter;
-    var votee = votes_arr[i].votes.join('/');
+    var votee = votes_arr[i].votes.join(', ');
     var post  = votes_arr[i].post;
     if(votee == 'NO_VOTE'){
       votee = 'no one';
