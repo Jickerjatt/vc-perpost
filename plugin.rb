@@ -77,14 +77,24 @@ after_initialize do
 
     end
 
+    def get_default_votes
+      votes = []
+      alive = get_living()
+      alive.each do |voter|
+        votes.push({ 'voter' => voter, 'votes' => [ NO_VOTE ]})
+      end
+      return votes
+    end
+
     def get_votes(p_number)
 
       # if no previous post, return
 
       if(p_number == 1)
-        return []
+        return get_default_votes()
       end
 
+      # if post is not made by a player or the host, ignore
 
       # remove blockquotes and get all vote/votecount class elements
 
@@ -103,9 +113,10 @@ after_initialize do
 
         author          = specific_post(p_number).username
         op              = specific_post(1).username
+        alive           = get_living()
 
         if(vote_elements.any? { |element| element.text == 'RESET' } && author == op)
-          return []
+          return get_default_votes
         end
 
 
@@ -115,7 +126,7 @@ after_initialize do
         if(vc_elements.last && author == op)
           stripped = ActionController::Base.helpers.strip_tags(vc_elements.last.text)
           vote_lines = stripped.split("\n")
-          votes = []
+          voters = Hash[alive.map { |voter| [voter, [NO_VOTE]]} ]
           vote_lines.each do |line|
             # get line data
 
@@ -127,34 +138,38 @@ after_initialize do
                 votee = NO_VOTE
               end
               players.split(",").each do |voter|
-                # create entry in return array
-                votes.push(Hash["voter" => voter.strip, "votee" => votee.strip])
+                # add this vote to each voter
+                voters[voter].push("votee" => votee.strip) if voters.include?(voter)
               end
             end
+          end
+          votes = []
+          voters.each do | voter, votees |
+            votes.push({ 'voter' => voter, 'votes' => votees })
           end
           return votes
         end
 
 
-        # if author is OP, return last post votes
+        # if author is not a player, return last post votes
 
         last_post_votes = get_votes(p_number-1) # recursive call
+        return last_post_votes if (!alive.include?(author))
 
 
-        if(author == op)
-          return last_post_votes
-        end
+        # get all the votes in the post
 
-
-        # get last entry in array
-
-        if(vote_elements.last)
-          vote_type, vote_value = vote_elements.last.text.split(" ", 2)
+        vote_values = []
+        vote_elements.each do |vote_element|
+          vote_type, vote_value = vote_element.text.split(" ", 2)
           if(vote_type == "UNVOTE")
-            vote_value = NO_VOTE
+            # if there is an unvote, only the unvote is kept
+            vote_values = [NO_VOTE]
+            break
           else
             vote_value = ActionController::Base.helpers.strip_tags(vote_value)
             vote_value.gsub!('@', '') if vote_value
+            vote_values << vote_value
           end
         end
 
@@ -170,12 +185,12 @@ after_initialize do
             # author is already in the list
             present = true
 
-            if(vote_value) # author has made a new action
+            if(vote_values.length > 0) # author has made a new action
 
               # delete old action and replace with new one
 
               last_post_votes.delete(item)
-              last_post_votes.push(Hash["voter" => author, "votee" => vote_value, "post" => p_number])
+              last_post_votes.push(Hash["voter" => author, "votes" => vote_values, "post" => p_number])
 
               break
 
@@ -186,10 +201,10 @@ after_initialize do
         end
 
         if(! present)
-          if(vote_value) # author has made an action
-            last_post_votes.push(Hash["voter" => author, "votee" => vote_value, "post" => p_number])
+          if(vote_values.length > 0) # author has made an action
+            last_post_votes.push(Hash["voter" => author, "votes" => vote_values, "post" => p_number])
           else # author has not made an action
-            last_post_votes.push(Hash["voter" => author, "votee" => NO_VOTE])
+            last_post_votes.push(Hash["voter" => author, "votes" => [NO_VOTE]])
           end
         end
 
