@@ -132,7 +132,7 @@ after_initialize do
         if(vc_elements.last && author == op)
           stripped = ActionController::Base.helpers.strip_tags(vc_elements.last.text)
           vote_lines = stripped.split("\n")
-          voters = Hash[alive.map { |voter| [voter, [NO_VOTE]]} ]
+          voters = Hash.new
           vote_lines.each do |line|
             # get line data
 
@@ -145,7 +145,11 @@ after_initialize do
               end
               players.split(",").each do |voter|
                 # add this vote to each voter
-                voters[voter].push("votee" => votee.strip) if voters.include?(voter)
+                if voters.include?(voter)
+                  voters[voter].push(votee.strip)
+                else
+                  voters[voter] = [votee.strip]
+                end
               end
             end
           end
@@ -196,7 +200,7 @@ after_initialize do
               # delete old action and replace with new one
 
               last_post_votes.delete(item)
-              last_post_votes.push(Hash["voter" => author, "votes" => vote_values, "post" => p_number])
+              last_post_votes.push({"voter" => author, "votes" => vote_values, "post" => p_number})
 
               break
 
@@ -208,9 +212,9 @@ after_initialize do
 
         if(! present)
           if(vote_values.length > 0) # author has made an action
-            last_post_votes.push(Hash["voter" => author, "votes" => vote_values, "post" => p_number])
+            last_post_votes.push({"voter" => author, "votes" => vote_values, "post" => p_number})
           else # author has not made an action
-            last_post_votes.push(Hash["voter" => author, "votes" => [NO_VOTE]])
+            last_post_votes.push({"voter" => author, "votes" => [NO_VOTE]})
           end
         end
 
