@@ -54,8 +54,16 @@ after_initialize do
 
     def get_living(p_number)
 
+      post  = specific_post(p_number)
 
-      html  = specific_post(p_number).cooked
+      author  = post.username
+      op      = specific_post(1).username
+
+      if(author != op)
+        return get_living(p_number-1)
+      end
+
+      html  = post.cooked
       doc   = Nokogiri::HTML.parse(html)
 
       alive_elements  = doc.xpath("//div[@class='alive']")
