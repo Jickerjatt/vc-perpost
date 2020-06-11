@@ -285,14 +285,14 @@ after_initialize do
 
       # this is a relevant player, parse html
 
-      doc   = Nokogiri::HTML.parse(this_post.cooked)
+      doc = Nokogiri::HTML.parse(this_post.cooked)
       doc.search('blockquote').remove
 
       # check for votes and add to votecount, then continue looking for more votes
 
       vote_elements = doc.xpath("//span[@class='vote']")
 
-      votes         = get_all_votes_from_vote_tags(vote_elements) if vote_elements.last
+      votes         = vote_elements.last ? get_all_votes_from_vote_tags(vote_elements) : []
       new_votecount = add_votes_to_votecount(p_number, votes, votecount)
 
       return get_votes(p_number-1, new_votecount)
