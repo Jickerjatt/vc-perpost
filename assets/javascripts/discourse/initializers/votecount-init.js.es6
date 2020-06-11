@@ -1,18 +1,10 @@
 import { withPluginApi } from 'discourse/lib/plugin-api'
-import TopicRoute from 'discourse/routes/topic'
 import Votecount from '../lib/votecount'
 import AppController from 'discourse/controllers/application';
 import showModal from 'discourse/lib/show-modal';
 import sweetalert from '../lib/sweetalert2/dist/sweetalert2'
-import { ajax } from 'discourse/lib/ajax';
 
 function initializePlugin(api) {
-  let topicController;
-
-  TopicRoute.on("setupTopicController", function(event) {
-    topicController = event.controller
-  })
-
 
   api.addPostMenuButton('votecount', attrs => {
 
@@ -137,29 +129,34 @@ function initializePlugin(api) {
 
 function getVotecountArr(votes_arr, alive_players){
   // restructure array of votes into votee: [voter, voter, voter]
+  // note that one voter can be voting multiple votees
 
   var vc_arr = [];
 
   for (var i = 0 ; i < votes_arr.length ; i++){
-    var votee = transformMalformedVote(votes_arr[i].votee, alive_players);
     var voter = votes_arr[i].voter;
+    var votes = votes_arr[i].votes;
 
-    var exists = false;
+    for (var j = 0 ; j < votes.length ; j++){
+      var votee   = transformMalformedVote(votes[j], alive_players);
+      var exists  = false;
 
 
-    // go through vc_arr to see if votee is present
+      // go through vc_arr to see if votee is present
 
-    for (var j = 0 ; j < vc_arr.length ; j++){
-      if(standardiseVote(vc_arr[j]['votee']) === standardiseVote(votee)){
-        vc_arr[j]['voters'].push(voter);
-        exists = true;
+      for (var k = 0 ; k < vc_arr.length ; k++){
+        if(standardiseVote(vc_arr[k]['votee']) === standardiseVote(votee)){
+          var voters = vc_arr[k]['voters']
+          if(!voters.includes(voter)) {voters.push(voter);} // only add if voter isn't already there
+          exists = true;
+        }
       }
-    }
 
-    // if votee is not already in array, insert object with votee and voters as keys
+      // if votee is not already in array, insert object with votee and voters as keys
 
-    if(!exists){
-      vc_arr.push({'votee': votee, 'voters': [voter]});
+      if(!exists){
+        vc_arr.push({'votee': votee, 'voters': [voter]});
+      }
     }
   }
 
@@ -178,8 +175,8 @@ function getVotesHtml(votes_arr){
   var votes = "";
 
   for (var i = 0 ; i < votes_arr.length ; i++){
-    var votee = votes_arr[i].votee;
     var voter = votes_arr[i].voter;
+    var votee = votes_arr[i].votes.join(', ');
     var post  = votes_arr[i].post;
     if(votee == 'NO_VOTE'){
       votee = 'no one';
@@ -269,7 +266,7 @@ function standardiseVote(vote) {
 
 export default {
   name: 'votecount-button',
-  initialize: function() {
-    withPluginApi('0.8.6', api => initializePlugin(api))
+  initialize: function(container) {
+    withPluginApi('0.8.6', api => initializePlugin(api, container))
   }
 }
