@@ -142,10 +142,10 @@ after_initialize do
 
             # check if the voter exists first
 
-            if voters.include?(voter)
-              voters[voter].push(votee.strip)
+            if voters.include?(voter.strip)
+              voters[voter.strip].push(votee.strip)
             else
-              voters[voter] = [votee.strip]
+              voters[voter.strip] = [votee.strip]
             end # end check for voter existence
           end # end iteration through voters on one line
         end # end check for empty line
@@ -260,15 +260,26 @@ after_initialize do
         doc.search('blockquote').remove
 
 
-        # check for alive tags - if present, return default votes
+        # check for alive tags - if present, return what we've got
 
         return votecount if doc.xpath("//div[@class='alive']").last
 
-        # check for votecount tags - if present, return votes from there
+        # check for votecount tags - if present, add our running total of votes onto that and return
 
         votecount_elements = doc.xpath("//div[@class='votecount']")
 
-        return get_votecount_from_votecount_tags(votecount_elements) if votecount_elements.last
+        if votecount_elements.last
+          new_votecount  = get_votecount_from_votecount_tags(votecount_elements)
+          votecount.reverse_each { |vote|
+
+            # add votes to votecount if they were made by the player
+
+            votecount.select{ |vote| vote.key?('post') }.each { |vote|
+              new_votecount = add_votes_to_votecount(vote['post'], vote['votes'], new_votecount) if vote.key?('post')
+            }}
+
+          return new_votecount
+        end
 
         # if neither of those returned, return previous post's votes
 
