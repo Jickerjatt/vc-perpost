@@ -260,13 +260,9 @@ after_initialize do
         doc.search('blockquote').remove
 
 
-        # check for reset tags - if present, return default votes
+        # check for alive tags - if present, return default votes
 
-        vote_elements   = doc.xpath("//span[@class='vote']")
-
-        if(vote_elements.any? { |element| element.text == 'RESET' })
-          return votecount
-        end
+        return votecount if doc.xpath("//div[@class='alive']").last
 
         # check for votecount tags - if present, return votes from there
 
