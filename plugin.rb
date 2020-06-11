@@ -31,7 +31,7 @@ after_initialize do
   class ::Votecount::VotecountController < ApplicationController
 
     def get_latest
-      render json: Hash["votecount" => get_votes(params[:post_number].to_i, []), "alive" => get_living(params[:post_number].to_i)]
+      render json: Hash["votecount" => get_votes(params[:post_number].to_i, get_default_votes(params[:post_number].to_i)), "alive" => get_living(params[:post_number].to_i)]
     end
 
     private
@@ -54,7 +54,7 @@ after_initialize do
 
     def get_living(p_number)
 
-      # base case
+      # if we've exhausted all posts, return empty array
 
       return [] if p_number <= 0
 
@@ -153,53 +153,49 @@ after_initialize do
       return voters
     end
 
-    def get_votes_from_votecount_tags(votecount_elements)
-      voters = get_players_with_votes_from_votecount_tags(votecount_elements)
+    def get_votecount_from_votecount_tags(votecount_elements)
+      votes = get_players_with_votes_from_votecount_tags(votecount_elements)
+      return reformat_votes_hash_to_votecount_array(votes)
+    end
 
-      # change voter => [votes] hash to array of {'voter'=>voter, 'votes'=>votes} hashes
+    # change voter => [votes] hash to array of {'voter'=>voter, 'votes'=>votes} hashes
+    def reformat_votes_hash_to_votecount_array(votes)
+      votecount = []
+      votes.each do | voter, votees |
+        votecount.push({ 'voter' => voter, 'votes' => votees })
+      end
+      return votecount
+    end
+
+    # get all the votes in the post
+    def get_all_votes_from_vote_tags(vote_elements)
 
       votes = []
-      voters.each do | voter, votees |
-        votes.push({ 'voter' => voter, 'votes' => votees })
+      vote_elements.each do |vote_element|
+        vote_type, vote_value = vote_element.text.split(" ", 2)
+        if(vote_type == "UNVOTE")
+          # if there is an unvote, only the unvote is kept
+          votes = [NO_VOTE]
+          break
+        else
+          vote_value = ActionController::Base.helpers.strip_tags(vote_value)
+          vote_value.gsub!('@', '') if vote_value
+          votes << vote_value
+        end
       end
 
       return votes
     end
 
-    def get_all_votes_from_vote_tags(vote_elements)
+    def add_votes_to_votecount(p_number, votes, votecount)
 
-        # get all the votes in the post
-
-        votes = []
-        vote_elements.each do |vote_element|
-          vote_type, vote_value = vote_element.text.split(" ", 2)
-          if(vote_type == "UNVOTE")
-            # if there is an unvote, only the unvote is kept
-            votes = [NO_VOTE]
-            break
-          else
-            vote_value = ActionController::Base.helpers.strip_tags(vote_value)
-            vote_value.gsub!('@', '') if vote_value
-            votes << vote_value
-          end
-        end
-
-        return votes
-    end
-
-    def get_updated_votes(votecount, p_number, votes)
-      # check if player already has a vote registered - if not then add them
       # maintain order by removing existing entry if they already have one
 
       player = specific_post(p_number).username
 
-      present = false
       votecount.each  do | item |
 
         if(item["voter"] == player)
-
-          # player is already in the list
-          present = true
 
           if(votes.length > 0) # player has made a new action
 
@@ -212,16 +208,17 @@ after_initialize do
           end
         end
       end
-
-      if(! present)
-        if(votes.length > 0) # player has made an action
-          votecount.push({"voter" => player, "votes" => votes, "post" => p_number})
-        else # player has not made an action
-          votecount.push({"voter" => player, "votes" => [NO_VOTE]})
-        end
-      end
-
       return votecount
+    end
+
+    def get_not_yet_voted(votecount)
+      # this is an array of hashes - check each hash and if it doesn't have a 'post' key (meaning the user hasn't explicitly voted), add the value for the 'voter' key
+
+      not_yet_voted = []
+
+      votecount.reject{ |vote| vote.key?('post') }.each { |vote| not_yet_voted << vote['voter']}
+
+      return not_yet_voted
     end
 
     def get_default_votes(p_number)
@@ -233,75 +230,72 @@ after_initialize do
       return votes
     end
 
-    def get_votes(p_number, voters)
-      # voters is an array of players who already have their vote noted
+    def get_votes(p_number, votecount)
+
+      # check if our votes are complete
+
+      not_yet_voted = get_not_yet_voted(votecount)
+      return votecount if not_yet_voted.empty?
 
       # check if p_number is the first post (or earlier if something's up) - if so, return default votes for the first post
 
-      return get_default_votes(1) if p_number <= 1
+      return votecount if p_number <= 1
 
       # post number is greater than 1
       # check if post exists - if no, return the previous post's votes
 
       this_post = specific_post(p_number)
-      return get_votes(p_number-1, voters) if this_post.nil?
+      return get_votes(p_number-1, votecount) if this_post.nil?
 
       # post exists
-      # check if this player is already in our list of voters, if so skip
-
-      author  = this_post.username
-      return get_votes(p_number-1, voters) if voters.include?(author)
-
-      # check if post author is an otherwise relevant person (living player or host)
-      # if no, return previous post's votes
+      # check if post author is the host
+      # if so, process host post
 
       op      = specific_post(1).username
-      players = get_living(p_number)
-
-      return get_votes(p_number-1, voters) unless op == author or players.include?(author)
-
-      # this is a relevant person, parse html
-
-      doc   = Nokogiri::HTML.parse(this_post.cooked)
-      doc.search('blockquote').remove
-
-      # check if it's the host - if so, check for votecount elements
+      author  = this_post.username
 
       if(op == author)
+
+        doc   = Nokogiri::HTML.parse(this_post.cooked)
+        doc.search('blockquote').remove
+
 
         # check for reset tags - if present, return default votes
 
         vote_elements   = doc.xpath("//span[@class='vote']")
 
         if(vote_elements.any? { |element| element.text == 'RESET' })
-          return get_default_votes(p_number)
+          return votecount
         end
 
         # check for votecount tags - if present, return votes from there
 
         votecount_elements = doc.xpath("//div[@class='votecount']")
 
-        return get_votes_from_votecount_tags(votecount_elements) if votecount_elements.last
+        return get_votecount_from_votecount_tags(votecount_elements) if votecount_elements.last
 
         # if neither of those returned, return previous post's votes
 
-        return get_votes(p_number-1, voters)
-
-      else
-
-        # author is a player, check for votes and add to previous post's votes, return that
-
-        vote_elements   = doc.xpath("//span[@class='vote']")
-        last_post_votes = get_votes(p_number-1, voters)
-
-        votes = get_all_votes_from_vote_tags(vote_elements) if vote_elements.last
-
-        # add this author to voters so we can skip them next time (unless we didn't find a vote)
-
-        voters << author unless votes.empty?
-
-        return get_updated_votes(last_post_votes, p_number, votes)
+        return get_votes(p_number-1, votecount)
       end
+
+      # is this someone who hasn't yet voted? if not, ignore
+
+      return get_votes(p_number-1, votecount) unless not_yet_voted.include? author
+
+      # this is a relevant player, parse html
+
+      doc   = Nokogiri::HTML.parse(this_post.cooked)
+      doc.search('blockquote').remove
+
+      # check for votes and add to votecount, then continue looking for more votes
+
+      vote_elements = doc.xpath("//span[@class='vote']")
+
+      votes         = get_all_votes_from_vote_tags(vote_elements) if vote_elements.last
+      new_votecount = add_votes_to_votecount(p_number, votes, votecount)
+
+      return get_votes(p_number-1, new_votecount)
     end
   end
 end
