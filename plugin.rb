@@ -202,7 +202,7 @@ after_initialize do
             # delete old action and replace with new one
 
             votecount.delete(item)
-            votecount.unshift({"voter" => player, "votes" => votes, "post" => p_number})
+            votecount.push({"voter" => player, "votes" => votes, "post" => p_number})
 
             break
           end
@@ -270,11 +270,11 @@ after_initialize do
 
         if votecount_elements.last
           new_votecount  = get_votecount_from_votecount_tags(votecount_elements)
-          votecount.reverse_each { |vote|
+          votecount.each { |vote|
 
             # add votes to votecount if they were made by the player
 
-            votecount.select{ |vote| vote.key?('post') }.each { |vote|
+            votecount.select{ |vote| vote.key?('post') }.reverse_each { |vote|
               new_votecount = add_votes_to_votecount(vote['post'], vote['votes'], new_votecount) if vote.key?('post')
             }}
 
