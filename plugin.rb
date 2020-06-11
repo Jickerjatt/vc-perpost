@@ -31,7 +31,7 @@ after_initialize do
   class ::Votecount::VotecountController < ApplicationController
 
     def get_latest
-      render json: Hash["votecount" => get_votes(params[:post_number].to_i), "alive" => get_living(params[:post_number].to_i)]
+      render json: Hash["votecount" => get_votes(params[:post_number].to_i, []), "alive" => get_living(params[:post_number].to_i)]
     end
 
     private
@@ -53,6 +53,11 @@ after_initialize do
     end
 
     def get_living(p_number)
+
+      # base case
+
+      return [] if p_number <= 0
+
       # check if post exists - if no, return the previous post's living
 
       this_post = specific_post(p_number)
@@ -228,7 +233,9 @@ after_initialize do
       return votes
     end
 
-    def get_votes(p_number)
+    def get_votes(p_number, voters)
+      # voters is an array of players who already have their vote noted
+
       # check if p_number is the first post (or earlier if something's up) - if so, return default votes for the first post
 
       return get_default_votes(1) if p_number <= 1
@@ -237,18 +244,23 @@ after_initialize do
       # check if post exists - if no, return the previous post's votes
 
       this_post = specific_post(p_number)
-      return get_votes(p_number-1) if this_post.nil?
+      return get_votes(p_number-1, voters) if this_post.nil?
 
       # post exists
-      # check if post author is a relevant person (living player or host) - if no, return previous post's votes
+      # check if this player is already in our list of voters, if so skip
 
       author  = this_post.username
+      return get_votes(p_number-1, voters) if voters.include?(author)
+
+      # check if post author is an otherwise relevant person (living player or host)
+      # if no, return previous post's votes
+
       op      = specific_post(1).username
       players = get_living(p_number)
 
-      return get_votes(p_number-1) unless op == author or players.include?(author)
+      return get_votes(p_number-1, voters) unless op == author or players.include?(author)
 
-      # this post is by a relevant person, parse html
+      # this is a relevant person, parse html
 
       doc   = Nokogiri::HTML.parse(this_post.cooked)
       doc.search('blockquote').remove
@@ -273,16 +285,21 @@ after_initialize do
 
         # if neither of those returned, return previous post's votes
 
-        return get_votes(p_number-1)
+        return get_votes(p_number-1, voters)
 
       else
 
         # author is a player, check for votes and add to previous post's votes, return that
 
         vote_elements   = doc.xpath("//span[@class='vote']")
-        last_post_votes = get_votes(p_number-1)
+        last_post_votes = get_votes(p_number-1, voters)
 
         votes = get_all_votes_from_vote_tags(vote_elements) if vote_elements.last
+
+        # add this author to voters so we can skip them next time (unless we didn't find a vote)
+
+        voters << author unless votes.empty?
+
         return get_updated_votes(last_post_votes, p_number, votes)
       end
     end
