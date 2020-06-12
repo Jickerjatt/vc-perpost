@@ -202,7 +202,7 @@ after_initialize do
             # delete old action and replace with new one
 
             votecount.delete(item)
-            votecount.push({"voter" => player, "votes" => votes, "post" => p_number})
+            votecount.unshift({"voter" => player, "votes" => votes, "post" => p_number})
 
             break
           end
