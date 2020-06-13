@@ -187,23 +187,16 @@ after_initialize do
       return votes
     end
 
-    def add_votes_to_votecount(p_number, votes, votecount)
+    def add_votes_to_votecount(player, votes, p_number, votecount)
 
-      # maintain order by removing existing entry if they already have one
-
-      player = specific_post(p_number).username
+      # votecount is of future votes, the votes are older. The existing entry should be left intact if it was made by a player
+      # the only reason we need to overwrite is when the future votes are defaults (no post key)
 
       votecount.each  do | item |
-
-        if(item["voter"] == player)
-
+        if((item["voter"] == player) and (!item.key? 'post'))
           if(votes.length > 0) # player has made a new action
-
-            # delete old action and replace with new one
-
             votecount.delete(item)
-            votecount.push({"voter" => player, "votes" => votes, "post" => p_number})
-
+            p_number ? votecount.unshift({"voter" => player, "votes" => votes, "post" => p_number}) : votecount.unshift({"voter" => player, "votes" => votes})
             break
           end
         end
@@ -269,16 +262,11 @@ after_initialize do
         votecount_elements = doc.xpath("//div[@class='votecount']")
 
         if votecount_elements.last
-          new_votecount  = get_votecount_from_votecount_tags(votecount_elements)
-          votecount.each { |vote|
-
-            # add votes to votecount if they were made by the player
-
-            votecount.select{ |vote| vote.key?('post') }.reverse_each { |vote|
-              new_votecount = add_votes_to_votecount(vote['post'], vote['votes'], new_votecount) if vote.key?('post')
-            }}
-
-          return new_votecount
+          manual_votecount  = get_votecount_from_votecount_tags(votecount_elements)
+          manual_votecount.reverse_each { |vote| # for each item in the manual votecount (iterated backwards)
+            votecount = add_votes_to_votecount(vote['voter'], vote['votes'], vote['post'], votecount) # add it to the start of the votecount
+          }
+          return votecount
         end
 
         # if neither of those returned, return previous post's votes
@@ -300,7 +288,7 @@ after_initialize do
       vote_elements = doc.xpath("//span[@class='vote']")
 
       votes         = vote_elements.last ? get_all_votes_from_vote_tags(vote_elements) : []
-      new_votecount = add_votes_to_votecount(p_number, votes, votecount)
+      new_votecount = add_votes_to_votecount(author, votes, p_number, votecount)
 
       return get_votes(p_number-1, new_votecount)
     end
