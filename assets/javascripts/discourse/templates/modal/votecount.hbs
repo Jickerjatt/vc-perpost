@@ -1,7 +1,8 @@
-{{#d-modal-body title="votecount.title"}}
-  {{{ model.votecountHtml }}}
+{{#d-modal-body title="votecount.modal.title"}}
+  {{{ vcHtml }}}
 {{/d-modal-body}}
 
 <div class="modal-footer">
-  {{d-modal-cancel close=(route-action "closeModal")}}
+  {{d-button class="btn-primary" label="votecount.modal.votesView" action=(action "setVotesView")}}
+  {{d-button class="btn-primary" label="votecount.modal.classicView" action=(action "setClassicView")}}
 </div>
