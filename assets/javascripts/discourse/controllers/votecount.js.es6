@@ -174,4 +174,14 @@ export default Controller.extend(ModalFunctionality, {
         }
     },
 
+    @discourseComputed('vcView')
+    showingClassicView(vcView) {
+        return vcView == "classic"
+    },
+
+    @discourseComputed('vcView')
+    showingVotesView(vcView) {
+        return vcView == "votes"
+    },
+
 });

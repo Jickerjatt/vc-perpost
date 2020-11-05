@@ -3,6 +3,11 @@
 {{/d-modal-body}}
 
 <div class="modal-footer">
-  {{d-button class="btn-primary" label="votecount.modal.votesView" action=(action "setVotesView")}}
-  {{d-button class="btn-primary" label="votecount.modal.classicView" action=(action "setClassicView")}}
+  {{#unless showingVotesView }}
+    {{d-button class="btn-primary" label="votecount.modal.votesView" action=(action "setVotesView")}}
+  {{/unless}}
+  {{#unless showingClassicView }}
+    {{d-button class="btn-primary" label="votecount.modal.classicView" action=(action "setClassicView")}}
+  {{/unless}}
+  {{d-modal-cancel close=(route-action "closeModal")}}
 </div>
