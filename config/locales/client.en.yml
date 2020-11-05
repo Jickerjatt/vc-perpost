@@ -2,3 +2,7 @@ en:
   js:
     votecount:
       title: 'show votes as of this post'
+      modal:
+        title: 'Votecount as of post #'
+        classicView: 'Show Classic Votecount'
+        votesView: 'Show Player Votes'
