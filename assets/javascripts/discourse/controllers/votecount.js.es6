@@ -2,6 +2,53 @@
 import Controller from "@ember/controller";
 import ModalFunctionality from "discourse/mixins/modal-functionality";
 import discourseComputed from "discourse-common/utils/decorators";
+import I18n from "I18n";
+
+export default Controller.extend(ModalFunctionality, {
+    vcView: null,
+    post_number: null,
+    title: null,
+
+    onShow() {
+        this.setProperties({
+            vcView: this.model.vcView,
+            post_number: this.model.post_number,
+            title: I18n.t("votecount.modal.title"),
+        })
+    },
+
+    actions:
+    {
+        setClassicView() {
+            this.set("vcView", 'classic')
+        },
+
+        setVotesView() {
+            this.set("vcView", 'votes')
+        },
+    },
+
+    @discourseComputed('vcView', 'post_number')
+    vcHtml(vcView) {
+        if (vcView == 'votes') {
+            return getVotesHtml(this.model.votecount);
+        }
+        else {
+            return getClassicVotecountHtml(this.model.votecount, this.model.alive)
+        }
+    },
+
+    @discourseComputed('vcView')
+    showingClassicView(vcView) {
+        return vcView == "classic"
+    },
+
+    @discourseComputed('vcView')
+    showingVotesView(vcView) {
+        return vcView == "votes"
+    },
+
+});
 
 
 function getClassicVotecountHtml(votecount, alive){
@@ -142,46 +189,3 @@ function standardiseVote(vote) {
   // lowercase, strip out spaces and @ symbol for comparing votes against each other
   return(vote.toLowerCase().replace(/\s/g,'').replace(/@/g,''))
 }
-
-export default Controller.extend(ModalFunctionality, {
-    vcView: null,
-
-    onShow() {
-        this.setProperties({
-            vcView: this.model.vcView,
-            post_number: this.model.post_number
-        })
-    },
-
-    actions:
-    {
-        setClassicView() {
-            this.set("vcView", 'classic')
-        },
-
-        setVotesView() {
-            this.set("vcView", 'votes')
-        },
-    },
-
-    @discourseComputed('vcView', 'post_number')
-    vcHtml(vcView) {
-        if (vcView == 'votes') {
-            return getVotesHtml(this.model.votecount);
-        }
-        else {
-            return getClassicVotecountHtml(this.model.votecount, this.model.alive)
-        }
-    },
-
-    @discourseComputed('vcView')
-    showingClassicView(vcView) {
-        return vcView == "classic"
-    },
-
-    @discourseComputed('vcView')
-    showingVotesView(vcView) {
-        return vcView == "votes"
-    },
-
-});
